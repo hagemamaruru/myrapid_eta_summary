@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
+    <title>Multiple Maps</title>
+    <style>
+      .map-row {
+        display: flex;
+        flex-wrap: wrap; /* Allow wrapping to the next row */
+        justify-content: space-between; /* Distribute maps evenly in a row */
+        margin-bottom: 20px; /* Add some spacing between rows */
+      }
+
+      .map-info-container {
+        flex-basis: calc(33.33% - 20px); /* Set the width of each map container in a row */
+        margin-bottom: 20px; /* Add some spacing between maps in a row */
+        box-sizing: border-box; /* Include padding and borders in the width */
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center map and info vertically */
+      }
+
+      .map {
+          width: 94%; /* Set map width to 100% of its container */
+          height: 400px;
+          margin: 10px;
+      }
+
+      .info {
+          min-width: 300px;
+          padding: 10px;
+          border: 1px solid #ccc;
+          margin: 10px;
+      }
+
+      .past-data {
+          min-width: 380px;
+          padding: 10px;
+          border: 1px solid #ccc;
+          margin: 10px;
+      }
+
+      table {
+        border-collapse: collapse; /* Merge borders between cells */
+        width: 100%;
+      }
+
+      th, td {
+        border: 1px solid #ccc; /* Add a 1px solid border around cells */
+        padding: 8px; /* Add padding to cells for spacing */
+        text-align: center; /* Center text horizontally */
+      }
+
+      th {
+        background-color: #f2f2f2; /* Gray background color for header cells */
+      }
+
+      .highlight {
+          background-color: yellow; 
+          font-weight: bold; 
+      }
+
+    </style>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDoagGtF0LC6HmHqJyu85wIGZSj6rtb-PE&callback=initMap"></script>
+</head>
+<body>
+    <pre id="json-data"></pre>
+    <div class="map-row" id="maps-container"></div>
+    <!-- <div id="maps-container"></div> -->
+    <script>
+        // Data for multiple routes
+        const routes = [
+          {
+            start_latitude: 3.102569,
+            start_longitude: 101.667151,
+            start_name: 'KL1412 HAB PANTAI HILLPARK',
+            end_latitude: 3.104103,
+            end_longitude: 101.666017,
+            end_name: 'KL1413 PANTAI MURNI'
+          },
+          {
+            start_latitude: 3.104103,
+            start_longitude: 101.666017,
+            start_name: 'KL1413 PANTAI MURNI',
+            end_latitude: 3.106853,
+            end_longitude: 101.666039,
+            end_name: 'KL1414 CENTRIO PANTAI HILLPARK'
+          },
+          {
+            start_latitude: 3.106853,
+            start_longitude: 101.666039,
+            start_name: 'KL1414 CENTRIO PANTAI HILLPARK',
+            end_latitude: 3.108591,
+            end_longitude: 101.666483,
+            end_name: 'KL2132 PANTAI HILLPARK (BARAT)'
+          },
+          {
+            start_latitude: 3.108591,
+            start_longitude: 101.666483,
+            start_name: 'KL2132 PANTAI HILLPARK (BARAT)',
+            end_latitude: 3.107839,
+            end_longitude: 101.670765,
+            end_name: 'KL1420 TAMAN BUKIT ANGKASA BLOK 6'
+          },
+          {
+            start_latitude: 3.107839,
+            start_longitude: 101.670765,
+            start_name: 'KL1420 TAMAN BUKIT ANGKASA BLOK 6',
+            end_latitude: 3.107514,
+            end_longitude: 101.673097,
+            end_name: 'KL1800 PPR SRI PANTAI (BARAT)'
+          },
+          {
+            start_latitude: 3.107514,
+            start_longitude: 101.673097,
+            start_name: 'KL1800 PPR SRI PANTAI (BARAT)',
+            end_latitude: 3.112547,
+            end_longitude: 101.673201,
+            end_name: 'KL1801 ANGKASAPURI'
+          },
+          {
+            start_latitude: 3.112547,
+            start_longitude: 101.673201,
+            start_name: 'KL1801 ANGKASAPURI',
+            end_latitude: 3.116453,
+            end_longitude: 101.671838,
+            end_name: 'KL1802 KUARTERS TNB (DAHLIA)'
+          },
+          {
+            start_latitude: 3.116453,
+            start_longitude: 101.671838,
+            start_name: 'KL1802 KUARTERS TNB (DAHLIA)',
+            end_latitude: 3.118338,
+            end_longitude: 101.672253,
+            end_name: 'KL1113 BALAI ISLAM TNB'
+          },
+          {
+            start_latitude: 3.120546,
+            start_longitude: 101.673604,
+            start_name: 'KL1114 HQ TNB',
+            end_latitude: 3.123338,
+            end_longitude: 101.676337,
+            end_name: 'KL1115 APARTMENT PUTRA RIA (OPP)'
+          },
+          {
+            start_latitude: 3.123338,
+            start_longitude: 101.676337,
+            start_name: 'KL1115 APARTMENT PUTRA RIA (OPP)',
+            end_latitude: 3.12748,
+            end_longitude: 101.678803,
+            end_name: 'KL1117 LRT BANGSAR'
+          },
+          {
+            start_latitude: 3.12748,
+            start_longitude: 101.678803,
+            start_name: 'KL1117 LRT BANGSAR',
+            end_latitude: 3.13035,
+            end_longitude: 101.684235,
+            end_name: 'KL1075 SUASANA SENTRAL LOFT'
+          },
+          {
+            start_latitude: 3.13035,
+            start_longitude: 101.684235,
+            start_name: 'KL1075 SUASANA SENTRAL LOFT',
+            end_latitude: 3.132961,
+            end_longitude: 101.687618,
+            end_name: 'KL1079 KL SENTRAL'
+          },
+          {
+            start_latitude: 3.132961,
+            start_longitude: 101.687618,
+            start_name: 'KL1079 KL SENTRAL',
+            end_latitude: 3.134408,
+            end_longitude: 101.688902,
+            end_name: 'KL1090 SENTRAL EXHIBITION MALL'
+          },
+          {
+            start_latitude: 3.144573,
+            start_longitude: 101.695534,
+            start_name: 'KL111 CENTRAL MARKET',
+            end_latitude: 3.145614,
+            end_longitude: 101.697089,
+            end_name: 'BANGKOK BANK 2'
+          },
+          {
+            start_latitude: 3.145614,
+            start_longitude: 101.697089,
+            start_name: 'BANGKOK BANK 2',
+            end_latitude: 3.144052,
+            end_longitude: 101.695432,
+            end_name: 'KL109 CENTRAL MARKET (OPP)'
+          },
+          {
+            start_latitude: 3.1429,
+            start_longitude: 101.694761,
+            start_name: 'KL110 PASAR SENI (PLATFORM F1 - F2)',
+            end_latitude: 3.137468,
+            end_longitude: 101.693245,
+            end_name: 'KL2144 TM BRICKFIELDS'
+          },
+          {
+            start_latitude: 3.137468,
+            start_longitude: 101.693245,
+            start_name: 'KL2144 TM BRICKFIELDS',
+            end_latitude: 3.136322,
+            end_longitude: 101.690915,
+            end_name: 'KL2145 HOTEL PRESCOTT'
+          },
+          {
+            start_latitude: 3.136322,
+            start_longitude: 101.690915,
+            start_name: 'KL2145 HOTEL PRESCOTT',
+            end_latitude: 3.13364,
+            end_longitude: 101.689082,
+            end_name: 'KL1080 BRICKFIELDS'
+          },
+          {
+            start_latitude: 3.13364,
+            start_longitude: 101.689082,
+            start_name: 'KL1080 BRICKFIELDS',
+            end_latitude: 3.131473,
+            end_longitude: 101.689089,
+            end_name: 'KL1082 SK METHODIST'
+          },
+          {
+            start_latitude: 3.131473,
+            start_longitude: 101.689089,
+            start_name: 'KL1082 SK METHODIST',
+            end_latitude: 3.129818,
+            end_longitude: 101.687114,
+            end_name: 'KL1083 PALM COURT'
+          },
+          {
+            start_latitude: 3.129818,
+            start_longitude: 101.687114,
+            start_name: 'KL1083 PALM COURT',
+            end_latitude: 3.130321,
+            end_longitude: 101.683642,
+            end_name: 'KL1760 SUASANA SENTRAL LOFT'
+          },
+          {
+            start_latitude: 3.130321,
+            start_longitude: 101.683642,
+            start_name: 'KL1760 SUASANA SENTRAL LOFT',
+            end_latitude: 3.129203,
+            end_longitude: 101.68066,
+            end_name: 'KL1095 BANGSAR UTAMA'
+          },
+          {
+            start_latitude: 3.129203,
+            start_longitude: 101.68066,
+            start_name: 'KL1095 BANGSAR UTAMA',
+            end_latitude: 3.127369,
+            end_longitude: 101.67915,
+            end_name: 'KL1096 LRT BANGSAR (OPP)'
+          },
+          {
+            start_latitude: 3.127369,
+            start_longitude: 101.67915,
+            start_name: 'KL1096 LRT BANGSAR (OPP)',
+            end_latitude: 3.12317,
+            end_longitude: 101.676547,
+            end_name: 'KL1097 PPR ABDULLAH HUKUM'
+          },
+          {
+            start_latitude: 3.12317,
+            start_longitude: 101.676547,
+            start_name: 'KL1097 PPR ABDULLAH HUKUM',
+            end_latitude: 3.118032,
+            end_longitude: 101.672601,
+            end_name: 'KL1098 LRT ABDULLAH HUKUM'
+          },
+          {
+            start_latitude: 3.112395,
+            start_longitude: 101.673575,
+            start_name: 'KL1803 KTM ANGKASAPURI',
+            end_latitude: 3.107231,
+            end_longitude: 101.671854,
+            end_name: 'KL1437 TAMAN BUKIT ANGKASA (TIMUR)'
+          },
+          {
+            start_latitude: 3.107231,
+            start_longitude: 101.671854,
+            start_name: 'KL1437 TAMAN BUKIT ANGKASA (TIMUR)',
+            end_latitude: 3.107529,
+            end_longitude: 101.670925,
+            end_name: 'KL2129 FLAT SRI ANGKASA 2'
+          },
+          {
+            start_latitude: 3.107529,
+            start_longitude: 101.670925,
+            start_name: 'KL2129 FLAT SRI ANGKASA 2',
+            end_latitude: 3.108217,
+            end_longitude: 101.668853,
+            end_name: 'KL2130 PPR KERINCHI'
+          },
+          {
+            start_latitude: 3.108217,
+            start_longitude: 101.668853,
+            start_name: 'KL2130 PPR KERINCHI',
+            end_latitude: 3.108328,
+            end_longitude: 101.666486,
+            end_name: 'KL2131 PANTAI HILLPARK'
+          },
+          {
+            start_latitude: 3.108328,
+            start_longitude: 101.666486,
+            start_name: 'KL2131 PANTAI HILLPARK',
+            end_latitude: 3.106998,
+            end_longitude: 101.666183,
+            end_name: 'KL1401 KOMERSIAL PANTAI HILLPARK'
+          },
+          {
+            start_latitude: 3.106998,
+            start_longitude: 101.666183,
+            start_name: 'KL1401 KOMERSIAL PANTAI HILLPARK',
+            end_latitude: 3.104087,
+            end_longitude: 101.666116,
+            end_name: 'KL1402 PANTAI MURNI'
+          }
+        ];
+
+        const past = [
+          {
+            "station_ride": 1000311,
+            "station_ride_lat": 3.102569,
+            "station_ride_long": 101.667151,
+            "station_ride_name": "KL1412 HAB PANTAI HILLPARK",
+            "station_alight": 1001654,
+            "station_alight_lat": 3.104103,
+            "station_alight_long": 101.666017,
+            "station_alight_name": "KL1413 PANTAI MURNI",
+            "ride_alight_order": "1-2",
+            "distance_between": 302,
+            "TTL_0609": "282",
+            "TTL_0912": "28",
+            "TTL_1215": "15",
+            "TTL_1518": "28",
+            "TTL_1821": "28",
+            "TTL_2100": null,
+            "AVG_0609": "871",
+            "AVG_0912": "645",
+            "AVG_1215": "873",
+            "AVG_1518": "760",
+            "AVG_1821": "589",
+            "AVG_2100": null,
+            "MIN_0609": "599",
+            "MIN_0912": "408",
+            "MIN_1215": "686",
+            "MIN_1518": "527",
+            "MIN_1821": "449",
+            "MIN_2100": null,
+            "MAX_0609": "1204",
+            "MAX_0912": "838",
+            "MAX_1215": "1026",
+            "MAX_1518": "994",
+            "MAX_1821": "754",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "1",
+            "AVG_SPEED_0912": "2",
+            "AVG_SPEED_1215": "1",
+            "AVG_SPEED_1518": "1",
+            "AVG_SPEED_1821": "2",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1001654,
+            "station_ride_lat": 3.104103,
+            "station_ride_long": 101.666017,
+            "station_ride_name": "KL1413 PANTAI MURNI",
+            "station_alight": 1002251,
+            "station_alight_lat": 3.106853,
+            "station_alight_long": 101.666039,
+            "station_alight_name": "KL1414 CENTRIO PANTAI HILLPARK",
+            "ride_alight_order": "2-3",
+            "distance_between": 252,
+            "TTL_0609": "8",
+            "TTL_0912": "3",
+            "TTL_1215": "3",
+            "TTL_1518": "4",
+            "TTL_1821": "1",
+            "TTL_2100": "1",
+            "AVG_0609": "230",
+            "AVG_0912": "59",
+            "AVG_1215": "140",
+            "AVG_1518": "58",
+            "AVG_1821": "65",
+            "AVG_2100": "83",
+            "MIN_0609": "213",
+            "MIN_0912": "59",
+            "MIN_1215": "140",
+            "MIN_1518": "58",
+            "MIN_1821": "65",
+            "MIN_2100": "83",
+            "MAX_0609": "236",
+            "MAX_0912": "59",
+            "MAX_1215": "140",
+            "MAX_1518": "58",
+            "MAX_1821": "65",
+            "MAX_2100": "83",
+            "AVG_SPEED_0609": "4",
+            "AVG_SPEED_0912": "15",
+            "AVG_SPEED_1215": "6",
+            "AVG_SPEED_1518": "16",
+            "AVG_SPEED_1821": "14",
+            "AVG_SPEED_2100": "11"
+          },
+          {
+            "station_ride": 1002251,
+            "station_ride_lat": 3.106853,
+            "station_ride_long": 101.666039,
+            "station_ride_name": "KL1414 CENTRIO PANTAI HILLPARK",
+            "station_alight": 1002252,
+            "station_alight_lat": 3.108591,
+            "station_alight_long": 101.666483,
+            "station_alight_name": "KL2132 PANTAI HILLPARK (BARAT)",
+            "ride_alight_order": "3-4",
+            "distance_between": 288,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": "1",
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": "605",
+            "AVG_1821": "284",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": "605",
+            "MIN_1821": "284",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": "605",
+            "MAX_1821": "284",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": "2",
+            "AVG_SPEED_1821": "4",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1002252,
+            "station_ride_lat": 3.108591,
+            "station_ride_long": 101.666483,
+            "station_ride_name": "KL2132 PANTAI HILLPARK (BARAT)",
+            "station_alight": 1000910,
+            "station_alight_lat": 3.107839,
+            "station_alight_long": 101.670765,
+            "station_alight_name": "KL1420 TAMAN BUKIT ANGKASA BLOK 6",
+            "ride_alight_order": "4-5",
+            "distance_between": 489,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": null,
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": "180",
+            "AVG_1518": null,
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": "180",
+            "MIN_1518": null,
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": "180",
+            "MAX_1518": null,
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "10",
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000910,
+            "station_ride_lat": 3.107839,
+            "station_ride_long": 101.670765,
+            "station_ride_name": "KL1420 TAMAN BUKIT ANGKASA BLOK 6",
+            "station_alight": 1001719,
+            "station_alight_lat": 3.107514,
+            "station_alight_long": 101.673097,
+            "station_alight_name": "KL1800 PPR SRI PANTAI (BARAT)",
+            "ride_alight_order": "5-6",
+            "distance_between": 351,
+            "TTL_0609": "3",
+            "TTL_0912": "1",
+            "TTL_1215": "1",
+            "TTL_1518": "1",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": "529",
+            "AVG_0912": "76",
+            "AVG_1215": "89",
+            "AVG_1518": "167",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": "529",
+            "MIN_0912": "76",
+            "MIN_1215": "89",
+            "MIN_1518": "167",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": "529",
+            "MAX_0912": "76",
+            "MAX_1215": "89",
+            "MAX_1518": "167",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "2",
+            "AVG_SPEED_0912": "17",
+            "AVG_SPEED_1215": "14",
+            "AVG_SPEED_1518": "8",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1001719,
+            "station_ride_lat": 3.107514,
+            "station_ride_long": 101.673097,
+            "station_ride_name": "KL1800 PPR SRI PANTAI (BARAT)",
+            "station_alight": 1000095,
+            "station_alight_lat": 3.112547,
+            "station_alight_long": 101.673201,
+            "station_alight_name": "KL1801 ANGKASAPURI",
+            "ride_alight_order": "6-7",
+            "distance_between": 611,
+            "TTL_0609": "3",
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": "3",
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": "75",
+            "AVG_0912": null,
+            "AVG_1215": "64",
+            "AVG_1518": "61",
+            "AVG_1821": "49",
+            "AVG_2100": null,
+            "MIN_0609": "75",
+            "MIN_0912": null,
+            "MIN_1215": "64",
+            "MIN_1518": "61",
+            "MIN_1821": "49",
+            "MIN_2100": null,
+            "MAX_0609": "75",
+            "MAX_0912": null,
+            "MAX_1215": "64",
+            "MAX_1518": "61",
+            "MAX_1821": "49",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "29",
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "34",
+            "AVG_SPEED_1518": "36",
+            "AVG_SPEED_1821": "45",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000095,
+            "station_ride_lat": 3.112547,
+            "station_ride_long": 101.673201,
+            "station_ride_name": "KL1801 ANGKASAPURI",
+            "station_alight": 1001706,
+            "station_alight_lat": 3.116453,
+            "station_alight_long": 101.671838,
+            "station_alight_name": "KL1802 KUARTERS TNB (DAHLIA)",
+            "ride_alight_order": "7-8",
+            "distance_between": 458,
+            "TTL_0609": "1",
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": "3",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": "342",
+            "AVG_0912": null,
+            "AVG_1215": "598",
+            "AVG_1518": "139",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": "342",
+            "MIN_0912": null,
+            "MIN_1215": "598",
+            "MIN_1518": "137",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": "342",
+            "MAX_0912": null,
+            "MAX_1215": "598",
+            "MAX_1518": "140",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "5",
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "3",
+            "AVG_SPEED_1518": "12",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1001706,
+            "station_ride_lat": 3.116453,
+            "station_ride_long": 101.671838,
+            "station_ride_name": "KL1802 KUARTERS TNB (DAHLIA)",
+            "station_alight": 1001575,
+            "station_alight_lat": 3.118338,
+            "station_alight_long": 101.672253,
+            "station_alight_name": "KL1113 BALAI ISLAM TNB",
+            "ride_alight_order": "8-9",
+            "distance_between": 213,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": "2",
+            "TTL_1518": null,
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": "1206",
+            "AVG_1518": null,
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": "1198",
+            "MIN_1518": null,
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": "1213",
+            "MAX_1518": null,
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "1",
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1004098,
+            "station_ride_lat": 3.120546,
+            "station_ride_long": 101.673604,
+            "station_ride_name": "KL1114 HQ TNB",
+            "station_alight": 1002106,
+            "station_alight_lat": 3.123338,
+            "station_alight_long": 101.676337,
+            "station_alight_name": "KL1115 APARTMENT PUTRA RIA (OPP)",
+            "ride_alight_order": "10-11",
+            "distance_between": 432,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": null,
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": "45",
+            "AVG_1518": null,
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": "45",
+            "MIN_1518": null,
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": "45",
+            "MAX_1518": null,
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "35",
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1002106,
+            "station_ride_lat": 3.123338,
+            "station_ride_long": 101.676337,
+            "station_ride_name": "KL1115 APARTMENT PUTRA RIA (OPP)",
+            "station_alight": 1001787,
+            "station_alight_lat": 3.12748,
+            "station_alight_long": 101.678803,
+            "station_alight_name": "KL1117 LRT BANGSAR",
+            "ride_alight_order": "11-12",
+            "distance_between": 540,
+            "TTL_0609": "259",
+            "TTL_0912": "63",
+            "TTL_1215": "59",
+            "TTL_1518": "167",
+            "TTL_1821": "138",
+            "TTL_2100": "8",
+            "AVG_0609": "113",
+            "AVG_0912": "142",
+            "AVG_1215": "184",
+            "AVG_1518": "162",
+            "AVG_1821": "185",
+            "AVG_2100": "143",
+            "MIN_0609": "51",
+            "MIN_0912": "108",
+            "MIN_1215": "103",
+            "MIN_1518": "101",
+            "MIN_1821": "110",
+            "MIN_2100": "142",
+            "MAX_0609": "215",
+            "MAX_0912": "181",
+            "MAX_1215": "264",
+            "MAX_1518": "236",
+            "MAX_1821": "260",
+            "MAX_2100": "145",
+            "AVG_SPEED_0609": "17",
+            "AVG_SPEED_0912": "14",
+            "AVG_SPEED_1215": "11",
+            "AVG_SPEED_1518": "12",
+            "AVG_SPEED_1821": "11",
+            "AVG_SPEED_2100": "14"
+          },
+          {
+            "station_ride": 1001787,
+            "station_ride_lat": 3.12748,
+            "station_ride_long": 101.678803,
+            "station_ride_name": "KL1117 LRT BANGSAR",
+            "station_alight": 1003609,
+            "station_alight_lat": 3.13035,
+            "station_alight_long": 101.684235,
+            "station_alight_name": "KL1075 SUASANA SENTRAL LOFT",
+            "ride_alight_order": "12-13",
+            "distance_between": 998,
+            "TTL_0609": "105",
+            "TTL_0912": "45",
+            "TTL_1215": "47",
+            "TTL_1518": "118",
+            "TTL_1821": "106",
+            "TTL_2100": "15",
+            "AVG_0609": "156",
+            "AVG_0912": "144",
+            "AVG_1215": "154",
+            "AVG_1518": "207",
+            "AVG_1821": "223",
+            "AVG_2100": "135",
+            "MIN_0609": "123",
+            "MIN_0912": "122",
+            "MIN_1215": "136",
+            "MIN_1518": "125",
+            "MIN_1821": "141",
+            "MIN_2100": "131",
+            "MAX_0609": "199",
+            "MAX_0912": "167",
+            "MAX_1215": "174",
+            "MAX_1518": "281",
+            "MAX_1821": "290",
+            "MAX_2100": "140",
+            "AVG_SPEED_0609": "23",
+            "AVG_SPEED_0912": "25",
+            "AVG_SPEED_1215": "23",
+            "AVG_SPEED_1518": "17",
+            "AVG_SPEED_1821": "16",
+            "AVG_SPEED_2100": "27"
+          },
+          {
+            "station_ride": 1003609,
+            "station_ride_lat": 3.13035,
+            "station_ride_long": 101.684235,
+            "station_ride_name": "KL1075 SUASANA SENTRAL LOFT",
+            "station_alight": 1001512,
+            "station_alight_lat": 3.132961,
+            "station_alight_long": 101.687618,
+            "station_alight_name": "KL1079 KL SENTRAL",
+            "ride_alight_order": "13-14",
+            "distance_between": 514,
+            "TTL_0609": "46",
+            "TTL_0912": "10",
+            "TTL_1215": "27",
+            "TTL_1518": "25",
+            "TTL_1821": "25",
+            "TTL_2100": "2",
+            "AVG_0609": "310",
+            "AVG_0912": "126",
+            "AVG_1215": "128",
+            "AVG_1518": "95",
+            "AVG_1821": "158",
+            "AVG_2100": "63",
+            "MIN_0609": "188",
+            "MIN_0912": "125",
+            "MIN_1215": "122",
+            "MIN_1518": "86",
+            "MIN_1821": "138",
+            "MIN_2100": "62",
+            "MAX_0609": "393",
+            "MAX_0912": "126",
+            "MAX_1215": "132",
+            "MAX_1518": "105",
+            "MAX_1821": "167",
+            "MAX_2100": "63",
+            "AVG_SPEED_0609": "6",
+            "AVG_SPEED_0912": "15",
+            "AVG_SPEED_1215": "14",
+            "AVG_SPEED_1518": "19",
+            "AVG_SPEED_1821": "12",
+            "AVG_SPEED_2100": "29"
+          },
+          {
+            "station_ride": 1001512,
+            "station_ride_lat": 3.132961,
+            "station_ride_long": 101.687618,
+            "station_ride_name": "KL1079 KL SENTRAL",
+            "station_alight": 1004275,
+            "station_alight_lat": 3.134408,
+            "station_alight_long": 101.688902,
+            "station_alight_name": "KL1090 SENTRAL EXHIBITION MALL",
+            "ride_alight_order": "14-15",
+            "distance_between": 1089,
+            "TTL_0609": "3",
+            "TTL_0912": "1",
+            "TTL_1215": "1",
+            "TTL_1518": "3",
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": "353",
+            "AVG_0912": "424",
+            "AVG_1215": "146",
+            "AVG_1518": "354",
+            "AVG_1821": "217",
+            "AVG_2100": null,
+            "MIN_0609": "349",
+            "MIN_0912": "424",
+            "MIN_1215": "146",
+            "MIN_1518": "310",
+            "MIN_1821": "217",
+            "MIN_2100": null,
+            "MAX_0609": "355",
+            "MAX_0912": "424",
+            "MAX_1215": "146",
+            "MAX_1518": "423",
+            "MAX_1821": "217",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "11",
+            "AVG_SPEED_0912": "9",
+            "AVG_SPEED_1215": "27",
+            "AVG_SPEED_1518": "11",
+            "AVG_SPEED_1821": "18",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1001096,
+            "station_ride_lat": 3.144573,
+            "station_ride_long": 101.695534,
+            "station_ride_name": "KL111 CENTRAL MARKET",
+            "station_alight": 1000220,
+            "station_alight_lat": 3.145614,
+            "station_alight_long": 101.697089,
+            "station_alight_name": "BANGKOK BANK 2",
+            "ride_alight_order": "17-18",
+            "distance_between": 216,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": "1",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": "462",
+            "AVG_1518": "281",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": "462",
+            "MIN_1518": "281",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": "462",
+            "MAX_1518": "281",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "2",
+            "AVG_SPEED_1518": "3",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000220,
+            "station_ride_lat": 3.145614,
+            "station_ride_long": 101.697089,
+            "station_ride_name": "BANGKOK BANK 2",
+            "station_alight": 1008294,
+            "station_alight_lat": 3.144052,
+            "station_alight_long": 101.695432,
+            "station_alight_name": "KL109 CENTRAL MARKET (OPP)",
+            "ride_alight_order": "18-19",
+            "distance_between": 273,
+            "TTL_0609": null,
+            "TTL_0912": "2",
+            "TTL_1215": "4",
+            "TTL_1518": "4",
+            "TTL_1821": "2",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": "434",
+            "AVG_1215": "299",
+            "AVG_1518": "498",
+            "AVG_1821": "187",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": "434",
+            "MIN_1215": "296",
+            "MIN_1518": "498",
+            "MIN_1821": "187",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": "434",
+            "MAX_1215": "302",
+            "MAX_1518": "498",
+            "MAX_1821": "187",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": "2",
+            "AVG_SPEED_1215": "3",
+            "AVG_SPEED_1518": "2",
+            "AVG_SPEED_1821": "5",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1004345,
+            "station_ride_lat": 3.1429,
+            "station_ride_long": 101.694761,
+            "station_ride_name": "KL110 PASAR SENI (PLATFORM F1 - F2)",
+            "station_alight": 1000857,
+            "station_alight_lat": 3.137468,
+            "station_alight_long": 101.693245,
+            "station_alight_name": "KL2144 TM BRICKFIELDS",
+            "ride_alight_order": "20-21",
+            "distance_between": 409,
+            "TTL_0609": "59",
+            "TTL_0912": "3",
+            "TTL_1215": "5",
+            "TTL_1518": null,
+            "TTL_1821": "1",
+            "TTL_2100": "7",
+            "AVG_0609": "131",
+            "AVG_0912": "89",
+            "AVG_1215": "177",
+            "AVG_1518": null,
+            "AVG_1821": "99",
+            "AVG_2100": "612",
+            "MIN_0609": "95",
+            "MIN_0912": "89",
+            "MIN_1215": "176",
+            "MIN_1518": null,
+            "MIN_1821": "99",
+            "MIN_2100": "604",
+            "MAX_0609": "171",
+            "MAX_0912": "89",
+            "MAX_1215": "178",
+            "MAX_1518": null,
+            "MAX_1821": "99",
+            "MAX_2100": "619",
+            "AVG_SPEED_0609": "11",
+            "AVG_SPEED_0912": "17",
+            "AVG_SPEED_1215": "8",
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": "15",
+            "AVG_SPEED_2100": "2"
+          },
+          {
+            "station_ride": 1000857,
+            "station_ride_lat": 3.137468,
+            "station_ride_long": 101.693245,
+            "station_ride_name": "KL2144 TM BRICKFIELDS",
+            "station_alight": 1002495,
+            "station_alight_lat": 3.136322,
+            "station_alight_long": 101.690915,
+            "station_alight_name": "KL2145 HOTEL PRESCOTT",
+            "ride_alight_order": "21-22",
+            "distance_between": 326,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": null,
+            "TTL_1821": "8",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": null,
+            "AVG_1821": "620",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": null,
+            "MIN_1821": "458",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": null,
+            "MAX_1821": "828",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": "2",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1002495,
+            "station_ride_lat": 3.136322,
+            "station_ride_long": 101.690915,
+            "station_ride_name": "KL2145 HOTEL PRESCOTT",
+            "station_alight": 1004276,
+            "station_alight_lat": 3.13364,
+            "station_alight_long": 101.689082,
+            "station_alight_name": "KL1080 BRICKFIELDS",
+            "ride_alight_order": "22-23",
+            "distance_between": 467,
+            "TTL_0609": "6",
+            "TTL_0912": "3",
+            "TTL_1215": "2",
+            "TTL_1518": "33",
+            "TTL_1821": "4",
+            "TTL_2100": null,
+            "AVG_0609": "73",
+            "AVG_0912": "60",
+            "AVG_1215": "69",
+            "AVG_1518": "84",
+            "AVG_1821": "327",
+            "AVG_2100": null,
+            "MIN_0609": "73",
+            "MIN_0912": "60",
+            "MIN_1215": "69",
+            "MIN_1518": "66",
+            "MIN_1821": "322",
+            "MIN_2100": null,
+            "MAX_0609": "73",
+            "MAX_0912": "60",
+            "MAX_1215": "69",
+            "MAX_1518": "90",
+            "MAX_1821": "332",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "23",
+            "AVG_SPEED_0912": "28",
+            "AVG_SPEED_1215": "24",
+            "AVG_SPEED_1518": "20",
+            "AVG_SPEED_1821": "5",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1004276,
+            "station_ride_lat": 3.13364,
+            "station_ride_long": 101.689082,
+            "station_ride_name": "KL1080 BRICKFIELDS",
+            "station_alight": 1002023,
+            "station_alight_lat": 3.131473,
+            "station_alight_long": 101.689089,
+            "station_alight_name": "KL1082 SK METHODIST",
+            "ride_alight_order": "23-24",
+            "distance_between": 316,
+            "TTL_0609": "1",
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": "1",
+            "TTL_1821": "2",
+            "TTL_2100": "2",
+            "AVG_0609": "159",
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": "212",
+            "AVG_1821": "450",
+            "AVG_2100": "353",
+            "MIN_0609": "159",
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": "212",
+            "MIN_1821": "450",
+            "MIN_2100": "353",
+            "MAX_0609": "159",
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": "212",
+            "MAX_1821": "450",
+            "MAX_2100": "353",
+            "AVG_SPEED_0609": "7",
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": "5",
+            "AVG_SPEED_1821": "3",
+            "AVG_SPEED_2100": "3"
+          },
+          {
+            "station_ride": 1002023,
+            "station_ride_lat": 3.131473,
+            "station_ride_long": 101.689089,
+            "station_ride_name": "KL1082 SK METHODIST",
+            "station_alight": 1002234,
+            "station_alight_lat": 3.129818,
+            "station_alight_long": 101.687114,
+            "station_alight_name": "KL1083 PALM COURT",
+            "ride_alight_order": "24-25",
+            "distance_between": 299,
+            "TTL_0609": "4",
+            "TTL_0912": "1",
+            "TTL_1215": null,
+            "TTL_1518": "1",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": "206",
+            "AVG_0912": "202",
+            "AVG_1215": null,
+            "AVG_1518": "206",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": "204",
+            "MIN_0912": "202",
+            "MIN_1215": null,
+            "MIN_1518": "206",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": "207",
+            "MAX_0912": "202",
+            "MAX_1215": null,
+            "MAX_1518": "206",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "5",
+            "AVG_SPEED_0912": "5",
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": "5",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1002234,
+            "station_ride_lat": 3.129818,
+            "station_ride_long": 101.687114,
+            "station_ride_name": "KL1083 PALM COURT",
+            "station_alight": 1003608,
+            "station_alight_lat": 3.130321,
+            "station_alight_long": 101.683642,
+            "station_alight_name": "KL1760 SUASANA SENTRAL LOFT",
+            "ride_alight_order": "25-26",
+            "distance_between": 775,
+            "TTL_0609": "5",
+            "TTL_0912": "10",
+            "TTL_1215": "14",
+            "TTL_1518": "5",
+            "TTL_1821": "9",
+            "TTL_2100": "7",
+            "AVG_0609": "131",
+            "AVG_0912": "157",
+            "AVG_1215": "172",
+            "AVG_1518": "188",
+            "AVG_1821": "197",
+            "AVG_2100": "183",
+            "MIN_0609": "131",
+            "MIN_0912": "157",
+            "MIN_1215": "164",
+            "MIN_1518": "188",
+            "MIN_1821": "196",
+            "MIN_2100": "183",
+            "MAX_0609": "131",
+            "MAX_0912": "157",
+            "MAX_1215": "179",
+            "MAX_1518": "188",
+            "MAX_1821": "198",
+            "MAX_2100": "183",
+            "AVG_SPEED_0609": "21",
+            "AVG_SPEED_0912": "18",
+            "AVG_SPEED_1215": "16",
+            "AVG_SPEED_1518": "15",
+            "AVG_SPEED_1821": "14",
+            "AVG_SPEED_2100": "15"
+          },
+          {
+            "station_ride": 1003608,
+            "station_ride_lat": 3.130321,
+            "station_ride_long": 101.683642,
+            "station_ride_name": "KL1760 SUASANA SENTRAL LOFT",
+            "station_alight": 1002086,
+            "station_alight_lat": 3.129203,
+            "station_alight_long": 101.68066,
+            "station_alight_name": "KL1095 BANGSAR UTAMA",
+            "ride_alight_order": "26-27",
+            "distance_between": 585,
+            "TTL_0609": "13",
+            "TTL_0912": "9",
+            "TTL_1215": "17",
+            "TTL_1518": "13",
+            "TTL_1821": "10",
+            "TTL_2100": "4",
+            "AVG_0609": "100",
+            "AVG_0912": "76",
+            "AVG_1215": "114",
+            "AVG_1518": "167",
+            "AVG_1821": "148",
+            "AVG_2100": "76",
+            "MIN_0609": "87",
+            "MIN_0912": "73",
+            "MIN_1215": "97",
+            "MIN_1518": "160",
+            "MIN_1821": "147",
+            "MIN_2100": "75",
+            "MAX_0609": "112",
+            "MAX_0912": "81",
+            "MAX_1215": "145",
+            "MAX_1518": "174",
+            "MAX_1821": "148",
+            "MAX_2100": "76",
+            "AVG_SPEED_0609": "21",
+            "AVG_SPEED_0912": "28",
+            "AVG_SPEED_1215": "18",
+            "AVG_SPEED_1518": "13",
+            "AVG_SPEED_1821": "14",
+            "AVG_SPEED_2100": "28"
+          },
+          {
+            "station_ride": 1002086,
+            "station_ride_lat": 3.129203,
+            "station_ride_long": 101.68066,
+            "station_ride_name": "KL1095 BANGSAR UTAMA",
+            "station_alight": 1001788,
+            "station_alight_lat": 3.127369,
+            "station_alight_long": 101.67915,
+            "station_alight_name": "KL1096 LRT BANGSAR (OPP)",
+            "ride_alight_order": "27-28",
+            "distance_between": 264,
+            "TTL_0609": null,
+            "TTL_0912": "1",
+            "TTL_1215": "1",
+            "TTL_1518": "1",
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": "85",
+            "AVG_1215": "89",
+            "AVG_1518": "246",
+            "AVG_1821": "104",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": "85",
+            "MIN_1215": "89",
+            "MIN_1518": "246",
+            "MIN_1821": "104",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": "85",
+            "MAX_1215": "89",
+            "MAX_1518": "246",
+            "MAX_1821": "104",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": "11",
+            "AVG_SPEED_1215": "11",
+            "AVG_SPEED_1518": "4",
+            "AVG_SPEED_1821": "9",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1001788,
+            "station_ride_lat": 3.127369,
+            "station_ride_long": 101.67915,
+            "station_ride_name": "KL1096 LRT BANGSAR (OPP)",
+            "station_alight": 1002600,
+            "station_alight_lat": 3.12317,
+            "station_alight_long": 101.676547,
+            "station_alight_name": "KL1097 PPR ABDULLAH HUKUM",
+            "ride_alight_order": "28-29",
+            "distance_between": 554,
+            "TTL_0609": "111",
+            "TTL_0912": "100",
+            "TTL_1215": "32",
+            "TTL_1518": "63",
+            "TTL_1821": "83",
+            "TTL_2100": "29",
+            "AVG_0609": "90",
+            "AVG_0912": "64",
+            "AVG_1215": "67",
+            "AVG_1518": "70",
+            "AVG_1821": "79",
+            "AVG_2100": "67",
+            "MIN_0609": "48",
+            "MIN_0912": "50",
+            "MIN_1215": "58",
+            "MIN_1518": "59",
+            "MIN_1821": "59",
+            "MIN_2100": "65",
+            "MAX_0609": "146",
+            "MAX_0912": "75",
+            "MAX_1215": "77",
+            "MAX_1518": "83",
+            "MAX_1821": "101",
+            "MAX_2100": "70",
+            "AVG_SPEED_0609": "22",
+            "AVG_SPEED_0912": "31",
+            "AVG_SPEED_1215": "30",
+            "AVG_SPEED_1518": "28",
+            "AVG_SPEED_1821": "25",
+            "AVG_SPEED_2100": "30"
+          },
+          {
+            "station_ride": 1002600,
+            "station_ride_lat": 3.12317,
+            "station_ride_long": 101.676547,
+            "station_ride_name": "KL1097 PPR ABDULLAH HUKUM",
+            "station_alight": 1004110,
+            "station_alight_lat": 3.118032,
+            "station_alight_long": 101.672601,
+            "station_alight_name": "KL1098 LRT ABDULLAH HUKUM",
+            "ride_alight_order": "29-30",
+            "distance_between": 735,
+            "TTL_0609": "1",
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": "2",
+            "TTL_1821": "4",
+            "TTL_2100": null,
+            "AVG_0609": "188",
+            "AVG_0912": null,
+            "AVG_1215": "45",
+            "AVG_1518": "177",
+            "AVG_1821": "139",
+            "AVG_2100": null,
+            "MIN_0609": "188",
+            "MIN_0912": null,
+            "MIN_1215": "45",
+            "MIN_1518": "177",
+            "MIN_1821": "71",
+            "MIN_2100": null,
+            "MAX_0609": "188",
+            "MAX_0912": null,
+            "MAX_1215": "45",
+            "MAX_1518": "177",
+            "MAX_1821": "198",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": "14",
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "59",
+            "AVG_SPEED_1518": "15",
+            "AVG_SPEED_1821": "19",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000096,
+            "station_ride_lat": 3.112395,
+            "station_ride_long": 101.673575,
+            "station_ride_name": "KL1803 KTM ANGKASAPURI",
+            "station_alight": 1000762,
+            "station_alight_lat": 3.107231,
+            "station_alight_long": 101.671854,
+            "station_alight_name": "KL1437 TAMAN BUKIT ANGKASA (TIMUR)",
+            "ride_alight_order": "31-32",
+            "distance_between": 810,
+            "TTL_0609": "2",
+            "TTL_0912": "3",
+            "TTL_1215": "4",
+            "TTL_1518": "11",
+            "TTL_1821": "20",
+            "TTL_2100": "2",
+            "AVG_0609": "183",
+            "AVG_0912": "137",
+            "AVG_1215": "215",
+            "AVG_1518": "254",
+            "AVG_1821": "338",
+            "AVG_2100": "278",
+            "MIN_0609": "183",
+            "MIN_0912": "137",
+            "MIN_1215": "213",
+            "MIN_1518": "254",
+            "MIN_1821": "327",
+            "MIN_2100": "278",
+            "MAX_0609": "183",
+            "MAX_0912": "137",
+            "MAX_1215": "216",
+            "MAX_1518": "254",
+            "MAX_1821": "353",
+            "MAX_2100": "278",
+            "AVG_SPEED_0609": "16",
+            "AVG_SPEED_0912": "21",
+            "AVG_SPEED_1215": "14",
+            "AVG_SPEED_1518": "11",
+            "AVG_SPEED_1821": "9",
+            "AVG_SPEED_2100": "10"
+          },
+          {
+            "station_ride": 1000762,
+            "station_ride_lat": 3.107231,
+            "station_ride_long": 101.671854,
+            "station_ride_name": "KL1437 TAMAN BUKIT ANGKASA (TIMUR)",
+            "station_alight": 1000763,
+            "station_alight_lat": 3.107529,
+            "station_alight_long": 101.670925,
+            "station_alight_name": "KL2129 FLAT SRI ANGKASA 2",
+            "ride_alight_order": "32-33",
+            "distance_between": 131,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": null,
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": null,
+            "AVG_1821": "241",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": null,
+            "MIN_1821": "241",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": null,
+            "MAX_1821": "241",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": "2",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000763,
+            "station_ride_lat": 3.107529,
+            "station_ride_long": 101.670925,
+            "station_ride_name": "KL2129 FLAT SRI ANGKASA 2",
+            "station_alight": 1002608,
+            "station_alight_lat": 3.108217,
+            "station_alight_long": 101.668853,
+            "station_alight_name": "KL2130 PPR KERINCHI",
+            "ride_alight_order": "33-34",
+            "distance_between": 222,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": null,
+            "TTL_1821": "1",
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": null,
+            "AVG_1821": "13",
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": null,
+            "MIN_1821": "13",
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": null,
+            "MAX_1821": "13",
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": "61",
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1002608,
+            "station_ride_lat": 3.108217,
+            "station_ride_long": 101.668853,
+            "station_ride_name": "KL2130 PPR KERINCHI",
+            "station_alight": 1000831,
+            "station_alight_lat": 3.108328,
+            "station_alight_long": 101.666486,
+            "station_alight_name": "KL2131 PANTAI HILLPARK",
+            "ride_alight_order": "34-35",
+            "distance_between": 293,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": "1",
+            "TTL_1518": "3",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": "83",
+            "AVG_1518": "169",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": "83",
+            "MIN_1518": "169",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": "83",
+            "MAX_1518": "169",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": "13",
+            "AVG_SPEED_1518": "6",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000831,
+            "station_ride_lat": 3.108328,
+            "station_ride_long": 101.666486,
+            "station_ride_name": "KL2131 PANTAI HILLPARK",
+            "station_alight": 1000608,
+            "station_alight_lat": 3.106998,
+            "station_alight_long": 101.666183,
+            "station_alight_name": "KL1401 KOMERSIAL PANTAI HILLPARK",
+            "ride_alight_order": "35-36",
+            "distance_between": 206,
+            "TTL_0609": null,
+            "TTL_0912": null,
+            "TTL_1215": null,
+            "TTL_1518": "5",
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": null,
+            "AVG_1215": null,
+            "AVG_1518": "544",
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": null,
+            "MIN_1215": null,
+            "MIN_1518": "117",
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": null,
+            "MAX_1215": null,
+            "MAX_1518": "1064",
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": null,
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": "1",
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          },
+          {
+            "station_ride": 1000608,
+            "station_ride_lat": 3.106998,
+            "station_ride_long": 101.666183,
+            "station_ride_name": "KL1401 KOMERSIAL PANTAI HILLPARK",
+            "station_alight": 1000312,
+            "station_alight_lat": 3.104087,
+            "station_alight_long": 101.666116,
+            "station_alight_name": "KL1402 PANTAI MURNI",
+            "ride_alight_order": "36-37",
+            "distance_between": 318,
+            "TTL_0609": null,
+            "TTL_0912": "1",
+            "TTL_1215": null,
+            "TTL_1518": null,
+            "TTL_1821": null,
+            "TTL_2100": null,
+            "AVG_0609": null,
+            "AVG_0912": "99",
+            "AVG_1215": null,
+            "AVG_1518": null,
+            "AVG_1821": null,
+            "AVG_2100": null,
+            "MIN_0609": null,
+            "MIN_0912": "99",
+            "MIN_1215": null,
+            "MIN_1518": null,
+            "MIN_1821": null,
+            "MIN_2100": null,
+            "MAX_0609": null,
+            "MAX_0912": "99",
+            "MAX_1215": null,
+            "MAX_1518": null,
+            "MAX_1821": null,
+            "MAX_2100": null,
+            "AVG_SPEED_0609": null,
+            "AVG_SPEED_0912": "12",
+            "AVG_SPEED_1215": null,
+            "AVG_SPEED_1518": null,
+            "AVG_SPEED_1821": null,
+            "AVG_SPEED_2100": null
+          }
+        ]
+      
+      function initMap() {
+        const mapsContainer = document.getElementById('maps-container');
+
+        // Iterate through each route and create a map for each
+        routes.forEach((route, index) => {
+          const mapInfoContainer = document.createElement('div');
+          mapInfoContainer.className = 'map-info-container';
+
+          const mapDiv = document.createElement('div');
+          mapDiv.id = `map-${index}`;
+          mapDiv.className = 'map';
+          mapInfoContainer.appendChild(mapDiv);
+
+          const infoDiv = document.createElement('div');
+          infoDiv.id = `info-${index}`;
+          infoDiv.className = 'info';
+          mapInfoContainer.appendChild(infoDiv);
+
+          const pastDataDiv = document.createElement('div');
+          pastDataDiv.className = 'past-data';
+          mapInfoContainer.appendChild(pastDataDiv);
+
+          mapsContainer.appendChild(mapInfoContainer);
+
+          const map = new google.maps.Map(mapDiv, {
+              center: { lat: route.start_latitude, lng: route.start_longitude },
+              zoom: 15,
+          });
+
+          const trafficLayer = new google.maps.TrafficLayer();
+          trafficLayer.setMap(map);
+
+          const startLatLng = new google.maps.LatLng(
+              route.start_latitude,
+              route.start_longitude
+          );
+          const endLatLng = new google.maps.LatLng(
+              route.end_latitude,
+              route.end_longitude
+          );
+
+          const directionsService = new google.maps.DirectionsService();
+
+          const request = {
+              origin: startLatLng,
+              destination: endLatLng,
+              travelMode: 'DRIVING', // Change the travel mode to TRANSIT
+          };
+
+
+          directionsService.route(request, function (response, status) {
+            if (status === 'OK') {
+                // Calculate the total duration for transit
+                const routeLeg = response.routes[0].legs[0];
+                const distance = routeLeg.distance.text;
+                const duration = routeLeg.duration.text;
+
+                // Display the route name and transit duration in the infoDiv
+                infoDiv.innerHTML = `
+                    <strong>Route:</strong> ${route.start_name} to ${route.end_name}<br>
+                    <strong>Transit Distance:</strong> ${distance}<br>
+                    <strong>Transit Duration:</strong> ${duration}
+                `;
+
+                const directionsRenderer = new google.maps.DirectionsRenderer();
+                directionsRenderer.setMap(map);
+                directionsRenderer.setDirections(response);
+            } else {
+                window.alert('Directions request failed due to ' + status);
+            }
+          });
+
+          const pastData = past[index];
+          if (pastData) {
+
+            const avg1 = Math.round(pastData.AVG_0609 / 60);
+            const avg2 = Math.round(pastData.AVG_0912 / 60);
+            const avg3 = Math.round(pastData.AVG_1215 / 60);
+            const avg4 = Math.round(pastData.AVG_1518 / 60);
+            const avg5 = Math.round(pastData.AVG_1821 / 60);
+            const avg6 = Math.round(pastData.AVG_2100 / 60);
+
+            const ttl0609 = pastData.TTL_0609 ?? 0;
+            const ttl0912 = pastData.TTL_0912 ?? 0;
+            const ttl1215 = pastData.TTL_1215 ?? 0;
+            const ttl1518 = pastData.TTL_1518 ?? 0;
+            const ttl1821 = pastData.TTL_1821 ?? 0;
+            const ttl2100 = pastData.TTL_2100 ?? 0;
+
+            const now = new Date();
+            const hours = now.getHours();
+
+            let highlightCell
+            if (hours >= 6 && hours < 9) {
+                highlightCell = document.querySelector('td[data-hour="6"]');
+            } else if (hours >= 9 && hours < 12) {
+                highlightCell = document.querySelector('td[data-hour="9"]');
+            } else if (hours >= 12 && hours < 15) {
+                highlightCell = document.querySelector('td[data-hour="12"]');
+            } else if (hours >= 15 && hours < 18) {
+                highlightCell = document.querySelector('td[data-hour="15"]');
+            } else if (hours >= 18 && hours < 21) {
+                highlightCell = document.querySelector('td[data-hour="18"]');
+            } else {
+                highlightCell = document.querySelector('td[data-hour="21"]');
+            }
+
+            // Add highlight class to cell
+            if (highlightCell) {
+                highlightCell.classList.add('highlight');
+            }
+
+            pastDataDiv.innerHTML = `
+                <center><strong>Historical Data</strong></center><br>
+                <strong>Average Duration Per 3 Hours (minutes):</strong><br>
+                <table>
+                  <thead>
+                    <tr>
+                      <td data-hour="6">0600 - 0900</td>
+                      <td data-hour="9">0900 - 1200</td>
+                      <td data-hour="12">1200 - 1500</td>
+                      <td data-hour="15">1500 - 1800</td>
+                      <td data-hour="18">1800 - 2100</td>
+                      <td data-hour="21">2100 - 0000</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>${avg1} </td>
+                      <td>${avg2} </td>
+                      <td>${avg3} </td>
+                      <td>${avg4} </td>
+                      <td>${avg5} </td>
+                      <td>${avg6} </td>
+                    </tr>
+                  </tbody>
+                </table><br>
+
+                <strong>Total Passenger Per 3 Hours (pax):</strong><br>
+                <table>
+                  <thead>
+                    <tr>
+                      <td data-hour="6">0600 - 0900</td>
+                      <td data-hour="9">0900 - 1200</td>
+                      <td data-hour="12">1200 - 1500</td>
+                      <td data-hour="15">1500 - 1800</td>
+                      <td data-hour="18">1800 - 2100</td>
+                      <td data-hour="21">2100 - 0000</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>${ttl0609} </td>
+                      <td>${ttl0912} </td>
+                      <td>${ttl1215} </td>
+                      <td>${ttl1518} </td>
+                      <td>${ttl1821} </td>
+                      <td>${ttl2100} </td>
+                    </tr>
+                  </tbody>
+                </table>
+            `;
+
+          }
+        });
+      }
+    </script>
+</body>
+</html>
