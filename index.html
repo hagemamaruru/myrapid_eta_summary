@@ -2188,28 +2188,6 @@
             const ttl_bus_1518 = pastData.ttl_bus_1518 ?? 0;
             const ttl_bus_1821 = pastData.ttl_bus_1821 ?? 0;
             const ttl_bus_2100 = pastData.ttl_bus_2100 ?? 0;
-
-            // const now = new Date();
-            // const hours = now.getHours();
-
-            // let highlightCell;
-            // if (hours >= 6 && hours < 9) {
-            //     highlightCell = document.querySelector('td[data-hour="6"]');
-            // } else if (hours >= 9 && hours < 12) {
-            //     highlightCell = document.querySelector('td[data-hour="9"]');
-            // } else if (hours >= 12 && hours < 15) {
-            //     highlightCell = document.querySelector('td[data-hour="12"]');
-            // } else if (hours >= 15 && hours < 18) {
-            //     highlightCell = document.querySelector('td[data-hour="15"]');
-            // } else if (hours >= 18 && hours < 21) {
-            //     highlightCell = document.querySelector('td[data-hour="18"]');
-            // } else {
-            //     highlightCell = document.querySelector('td[data-hour="21"]');
-            // }
-
-            // if (highlightCell) {
-            //     highlightCell.classList.add('highlight');
-            // }
             
             pastDataDiv.innerHTML = `
                 <center><strong>Historical Data</strong></center><br>
@@ -2225,7 +2203,7 @@
                       <td data-hour="21">2100 - 0000</td>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id='avd${index}'>
                     <tr>
                       <td>${avg1} </td>
                       <td>${avg2} </td>
@@ -2249,7 +2227,7 @@
                       <td data-hour="21">2100 - 0000</td>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id='avp${index}'>
                     <tr>
                       <td>${ttl0609} </td>
                       <td>${ttl0912} </td>
@@ -2273,7 +2251,7 @@
                       <td data-hour="21">2100 - 0000</td>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id='avb${index}'>
                     <tr>
                       <td>${ttl_bus_0609} </td>
                       <td>${ttl_bus_0912} </td>
@@ -2285,6 +2263,50 @@
                   </tbody>
                 </table>
             `;
+
+            const now = new Date;
+            const hours = now.getHours();
+            const table = document.getElementById('avd'+index);
+            const table2 = document.getElementById('avp'+index);
+            const table3 = document.getElementById('avb'+index);
+            const rows = table.querySelectorAll('tr')
+            const rows2 = table2.querySelectorAll('tr')
+            const rows3 = table3.querySelectorAll('tr')
+
+            let highlightCell
+
+            if (hours >= 6 && hours < 9) {
+              highlightCell = rows[0].querySelector('tbody tr td:first-child');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:first-child');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:first-child');
+            } else if (hours >= 9 && hours < 12) {
+              highlightCell = rows[0].querySelector('tbody tr td:nth-child(2)');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:nth-child(2)');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:nth-child(2)');
+            } else if (hours >= 12 && hours < 15) {
+              highlightCell = rows[0].querySelector('tbody tr td:nth-child(3)');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:nth-child(3)');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:nth-child(3)');
+            } else if (hours >= 15 && hours < 18) {
+              highlightCell = rows[0].querySelector('tbody tr td:nth-child(4)');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:nth-child(4)');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:nth-child(4)');
+            } else if (hours >= 18 && hours < 21) {
+              highlightCell = rows[0].querySelector('tbody tr td:nth-child(5)');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:nth-child(5)');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:nth-child(5)');
+            } else {
+              highlightCell = rows[0].querySelector('tbody tr td:last-child');
+              highlightCell2 = rows2[0].querySelector('tbody tr td:last-child');
+              highlightCell3 = rows3[0].querySelector('tbody tr td:last-child');
+            }
+
+            // Add highlight class to cell
+            if (highlightCell) {
+              highlightCell.classList.add('highlight');
+              highlightCell2.classList.add('highlight');
+              highlightCell3.classList.add('highlight');
+            }
 
           }
         });
