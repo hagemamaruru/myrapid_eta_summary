@@ -19,17 +19,17 @@
         box-sizing: border-box; /* Include padding and borders in the width */
         display: flex;
         flex-direction: column;
-        align-items: center; /* Center map and info vertically */
+        align-items: center; Center map and info vertically
       }
 
       .map {
-          width: 94%; /* Set map width to 100% of its container */
+          width: 94%; 
           height: 0px;
           margin: 10px;
       }
 
       .info {
-          min-width: 300px;
+          min-width: 380px;
           padding: 10px;
           border: 1px solid #ccc;
           margin: 10px;
@@ -136,7 +136,7 @@
                                   const duration = routeLeg.duration.text;
 
                                   infoDiv.innerHTML = `
-                                      <center><strong>Google API</strong></center><br>
+                                      <center><strong>MapQuest API</strong></center><br>
                                       <strong>Route:</strong> ${route.start_name} to ${route.end_name}<br>
                                       <strong>Transit Distance:</strong> ${distance}<br>
                                       <strong>Transit Duration:</strong> ${duration}<br>
